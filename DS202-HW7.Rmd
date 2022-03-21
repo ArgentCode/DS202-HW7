@@ -5,6 +5,8 @@ date: "3/9/2022"
 output: html_document
 ---
 
+Link to the [Github Project](https://github.com/ArgentCode/DS202-HW7 "Github Project")
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -40,25 +42,94 @@ temp
 ```
 
 ### 2 answer
-The chicks in diet 1 seemed to, on average, start the heaviest. The chicks in diet 4 seemed to on average be the smallest at the start
+The chicks in diet 1 seemed to, on average, start the heaviest, and have the smallest standard deviation at 0.99. The chicks in diet 2 have the smallest average weight and the highest standard deviation at 40.7 weight and 1.49 standard deviation. All diets have 10 chicks except group 1 which has 20.
 
 ## Question 3
 3. construct a ggplot that shows average weights by diet with an interval (shown as a line) of +- the standard deviation around the averages.
 
 ```{r}
+chickweight %>% group_by(Diet, Time) %>% summarise(
+  m.weight = mean(weight, na.rm=TRUE),
+  sd.weight = sd(weight, na.rm=TRUE)) %>%
+  ggplot(aes(x=Time, fill=Diet)) +
+  geom_bar(aes(weight=m.weight), position=position_dodge()) +
+  geom_errorbar(aes(ymin=m.weight-sd.weight, ymax=m.weight+sd.weight), colour="black", width=.1, position=position_dodge(.9)) +
+  ylab("Mean Weight") +
+  ggtitle("Mean weight of each diet by time, with standard deviation bars")
 
+chickweight %>% group_by(Diet) %>% summarise(
+  m.weight = mean(weight, na.rm=TRUE),
+  sd.weight = sd(weight, na.rm=TRUE)) %>%
+  ggplot(aes(x=Diet)) +
+  geom_bar(aes(weight=m.weight), position=position_dodge()) +
+  geom_errorbar(aes(ymin=m.weight-sd.weight, ymax=m.weight+sd.weight), colour="black", width=.1, position=position_dodge(.9)) +
+  ylab("Mean Weight") +
+  ggtitle("Mean weight by diet, with standard deviation bars")
+
+filter(chickweight, Time == 0) %>% group_by(Diet) %>% summarise(
+  m.weight = mean(weight, na.rm=TRUE),
+  sd.weight = sd(weight, na.rm=TRUE)) %>%
+  ggplot(aes(x=Diet)) +
+  geom_bar(aes(weight=m.weight), position=position_dodge()) +
+  geom_errorbar(aes(ymin=m.weight-sd.weight, ymax=m.weight+sd.weight), colour="black", width=.1, position=position_dodge(.9)) +
+  ylab("Mean Weight") +
+  ggtitle("Mean weight by diet at time == 0, with standard deviation bars")
 ```
+### 3 Answer
+
+This question confused me admittedly so I made 3 graphs for each of my interpretations of the question.
+Graph 1: This shows the mean weight with standard deviation bars for each of the diets at each time intervals, we see that as time progresses, the standard deviations get rather large
+Graph 2: This is the graph I think the question intended to be answered with, but you can't really infer anything off of it. The graph uses a mix of all the times.
+Graph 3: This is the graph at time 0, so it shows they are all quite similar, with Diet 1 having the highest mean.
+
+## Question 4
 
 4. Each chick should have twelve weight measurements. Use the dplyr package to identify how many chicks have a complete set of weight measurements and how many measurements there are in the incomplete cases. Extract a subset of the data for all chicks with complete information and name the data set `complete`. (Hint: you might want to use mutate to introduce a helper variable consisting of the number of observations)
 
-```{r}
+### 4 answer
 
+There are 45 chicks with full data sets, and 5 with missing data. Of the 5 chicks with missing data we are missing 22 individual time measurements. In each of the bad data sets, it is a cut off rather than a gap. This implies the chick was removed from the study at that point for whatever reason.
+```{r}
+chickweight.long = chickweight %>% spread(key=Time, value=weight)
+chickweight.long$na_count = apply(is.na(chickweight.long), 1, sum)
+
+complete = chickweight.long %>% filter(na_count == 0)
+complete = complete %>% select(-na_count)
+badData = chickweight.long %>% filter(na_count > 0)
+
+
+complete = complete %>% gather(key = time, value = weight, 3:14)
 ```
 
+
+## Question 5
 5. In the complete data set introduce a new variable that measures the current weight difference compared to day 0. Name this variable  `weightgain`.
 
+```{r}
+complete = complete %>%
+  group_by(Chick) %>%
+  mutate(Chick = Chick,
+         Diet = Diet,
+         time = time,
+         weight = weight,
+         weightgain = weight - first(weight))
+```
+
+### 5 answer
+No matter how I went about it I kept ending up with weird data due to using the group by function to find the differences. This is the strange solution I found.
+
+### Question 6
 6. Use ggplot2 to create side-by-side boxplots of `weightgain` by `Diet` for day 21. Describe the relationship in 2-3 sentences. Change the order of the categories in the Diet variable such that the boxplots are ordered by median `weightgain`.
 
+```{r}
+complete %>% filter(time == 21) %>%
+  ggplot(aes(x=fct_reorder(Diet, weightgain, median), y=weightgain)) + geom_boxplot() +
+  xlab("Diet") +
+  ggtitle("Difference from day 21 and day 0 weights by diet")
+```
+
+### 6 answer
+Diet 1 had the lowest median weightgain, while diet 3 had the highest. The IQR and lines surrounding diet 4 are very small in comparison to the others. Diet 2 has the widest spread of data, and some of the lowest scores.
 
 Note: your submission is supposed to be fully reproducible, i.e. the TA and I will 'knit' your submission in RStudio. 
 
