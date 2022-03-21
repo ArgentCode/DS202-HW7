@@ -17,11 +17,47 @@ For all of the questions use `dplyr` functions whenever possible.
 
 1. Download the RMarkdown file with these homework instructions to use as a template for your work.
 Make sure to replace "Your Name" in the YAML with your name.
+
+```{r}
+library(tidyverse)
+library(reshape2)
+library(dplyr)
+chickweight = ChickWeight
+```
+## Question 2
 2. Get a frequency breakdown of the number of chicks, their average weight and the standard deviation of the weights in each of the diets at the start of the study.  
-3. construct a ggplot that shows average weights by diet with an interval (shown as a line) of +- the standard deviation around the averages.  
+```{r}
+temp = 
+  filter(chickweight, Time == 0) %>%
+  group_by(Diet) %>%
+  summarise(across(c("weight"), list(mean = mean, sd = sd)))
+temp2 = 
+  filter(chickweight, Time == 0) %>%
+  group_by(Diet) %>% 
+  count()
+temp$count = temp2$n
+temp
+```
+
+### 2 answer
+The chicks in diet 1 seemed to, on average, start the heaviest. The chicks in diet 4 seemed to on average be the smallest at the start
+
+## Question 3
+3. construct a ggplot that shows average weights by diet with an interval (shown as a line) of +- the standard deviation around the averages.
+
+```{r}
+
+```
+
 4. Each chick should have twelve weight measurements. Use the dplyr package to identify how many chicks have a complete set of weight measurements and how many measurements there are in the incomplete cases. Extract a subset of the data for all chicks with complete information and name the data set `complete`. (Hint: you might want to use mutate to introduce a helper variable consisting of the number of observations)
-4. In the complete data set introduce a new variable that measures the current weight difference compared to day 0. Name this variable  `weightgain`.
-5. Use ggplot2 to create side-by-side boxplots of `weightgain` by `Diet` for day 21. Describe the relationship in 2-3 sentences. Change the order of the categories in the Diet variable such that the boxplots are ordered by median `weightgain`.
+
+```{r}
+
+```
+
+5. In the complete data set introduce a new variable that measures the current weight difference compared to day 0. Name this variable  `weightgain`.
+
+6. Use ggplot2 to create side-by-side boxplots of `weightgain` by `Diet` for day 21. Describe the relationship in 2-3 sentences. Change the order of the categories in the Diet variable such that the boxplots are ordered by median `weightgain`.
 
 
 Note: your submission is supposed to be fully reproducible, i.e. the TA and I will 'knit' your submission in RStudio. 
